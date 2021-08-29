@@ -1,1 +1,16 @@
-// TODO
+.container {
+  width: 100%;
+  height: 7rem;
+
+  div {
+    vertical-align: middle;
+    line-height: 7rem;
+    height: 100%;
+    margin: 0 auto;
+
+    button {
+      background: transparent;
+      border: none;
+    }
+  }
+}

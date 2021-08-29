@@ -1,1 +1,10 @@
-// TODO
+.container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem;
+
+  @media (min-width: 1080px) {
+    padding: 0;
+  }
+}
