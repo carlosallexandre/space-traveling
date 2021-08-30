@@ -1,0 +1,22 @@
+.postList {
+  list-style: none;
+
+  > li + li {
+    margin-top: 3rem;
+  }
+
+  margin-bottom: 4rem;
+}
+
+.loadMoreButton {
+  color: var(--highlight);
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: 0.2s;
+
+  &:hover {
+    filter: brightness(0.8);
+  }
+}

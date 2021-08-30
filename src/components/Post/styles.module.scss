@@ -1,0 +1,47 @@
+.post {
+  width: fit-content;
+  cursor: pointer;
+
+  &:hover h1 {
+    color: var(--highlight);
+  }
+
+  h1 {
+    font-weight: 700;
+    font-size: 1.75rem;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.5rem;
+    color: var(--heading);
+    transition: color 0.2s;
+  }
+
+  p {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  ul {
+    list-style: none;
+    color: var(--info);
+    display: flex;
+    align-items: center;
+
+    li {
+      display: flex;
+      align-items: center;
+
+      & + li {
+        margin-left: 24px;
+      }
+
+      svg {
+        font-size: 20px;
+        margin-right: 8px;
+      }
+
+      time, span {
+        font-size: 14px;
+      }
+    }
+  }
+}
