@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import { useRouter } from 'next/router';
 
 import Prismic from '@prismicio/client';
 import { RichText } from 'prismic-dom';
@@ -35,7 +36,9 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps): JSX.Element {
-  if (!post) {
+  const router = useRouter();
+
+  if (router.isFallback) {
     return <strong>Carregando...</strong>;
   }
 
@@ -79,8 +82,8 @@ export default function Post({ post }: PostProps): JSX.Element {
           </span>
         </div>
 
-        {post.data.content.map(({ heading, body }) => (
-          <section className={styles.postSection}>
+        {post.data.content.map(({ heading, body }, index) => (
+          <section className={styles.postSection} key={String(index)}>
             <h2>{heading}</h2>
             <div dangerouslySetInnerHTML={{ __html: RichText.asHtml(body) }} />
           </section>
@@ -106,10 +109,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
+  console.log(params);
+
   const prismic = getPrismicClient();
   const response = await prismic.getByUID(
     'posts',
-    params.slug.toString(),
+    params.slug?.toString(),
     null
   );
 
