@@ -1,0 +1,28 @@
+.container {
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  width: fit-content;
+  transition: all 0.2s;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  span {
+    display: block;
+    font-size: 1.125rem;
+    color: var(--heading);
+    margin-bottom: 0.5rem;
+    text-align: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+  }
+
+  strong {
+    color: var(--highlight);
+    font-size: 1rem;
+    text-align: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+  }
+}

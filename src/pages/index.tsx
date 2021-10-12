@@ -70,7 +70,7 @@ export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
     Prismic.Predicates.at('document.type', 'posts'),
-    { pageSize: 2 }
+    { pageSize: 2, orderings: '[my.posts.date desc]' }
   );
 
   return {

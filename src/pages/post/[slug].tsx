@@ -13,9 +13,13 @@ import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import { Comments } from '../../components/Comments';
+import { PostLink } from '../../components/PostLink';
 
 interface Post {
+  uid: string;
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -33,14 +37,33 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  nextPost?: Post;
+  prevPost?: Post;
+  previewRef?: string;
 }
 
-export default function Post({ post }: PostProps): JSX.Element {
+export default function Post({
+  post,
+  nextPost,
+  prevPost,
+  previewRef,
+}: PostProps): JSX.Element {
   const router = useRouter();
 
   if (router.isFallback) {
-    return <strong>Carregando...</strong>;
+    return (
+      <main className={commonStyles.container}>
+        <strong>Carregando...</strong>
+      </main>
+    );
   }
+
+  const exitPreview = (): Promise<void> =>
+    fetch('http://localhost:3000/api/exit-preview').then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+    });
 
   const wordsTotal = post.data.content.reduce<number>((accumulator, cont) => {
     return (
@@ -61,33 +84,78 @@ export default function Post({ post }: PostProps): JSX.Element {
       </div>
 
       <main className={commonStyles.container}>
-        <h1 className={styles.postTitle}>{post.data.title}</h1>
+        <article>
+          <h1 className={styles.postTitle}>{post.data.title}</h1>
 
-        <div className={styles.postInfo}>
-          <span>
-            <FiCalendar />
-            <time>
-              {format(parseISO(post.first_publication_date), 'dd LLL yyyy', {
-                locale: ptBR,
-              })}
-            </time>
-          </span>
-          <span>
-            <FiUser />
-            <span>{post.data.author}</span>
-          </span>
-          <span>
-            <FiClock />
-            <span>{estimatedReadTimeMinutes} min</span>
-          </span>
-        </div>
+          <div className={styles.postInfo}>
+            <span>
+              <FiCalendar />
+              <time>
+                {format(parseISO(post.first_publication_date), 'dd LLL yyyy', {
+                  locale: ptBR,
+                })}
+              </time>
+            </span>
+            <span>
+              <FiUser />
+              <span>{post.data.author}</span>
+            </span>
+            <span>
+              <FiClock />
+              <span>{estimatedReadTimeMinutes} min</span>
+            </span>
 
-        {post.data.content.map(({ heading, body }, index) => (
-          <section className={styles.postSection} key={String(index)}>
-            <h2>{heading}</h2>
-            <div dangerouslySetInnerHTML={{ __html: RichText.asHtml(body) }} />
-          </section>
-        ))}
+            {post.last_publication_date && (
+              <div>
+                * editado em{' '}
+                {format(
+                  parseISO(post.last_publication_date),
+                  "dd LLL yyyy, 'às' HH:mm",
+                  {
+                    locale: ptBR,
+                  }
+                )}
+              </div>
+            )}
+          </div>
+
+          {post.data.content.map(({ heading, body }, index) => (
+            <section className={styles.postSection} key={String(index)}>
+              <h2>{heading}</h2>
+              <div
+                dangerouslySetInnerHTML={{ __html: RichText.asHtml(body) }}
+              />
+            </section>
+          ))}
+        </article>
+
+        <hr className={styles.divider} />
+
+        <nav className={styles.postNav}>
+          {prevPost && (
+            <PostLink href={`/post/${prevPost.uid}`}>
+              {prevPost.data.title}
+            </PostLink>
+          )}
+
+          {nextPost && (
+            <PostLink href={`/post/${nextPost.uid}`} nextPost>
+              {nextPost.data.title}
+            </PostLink>
+          )}
+        </nav>
+
+        <Comments />
+
+        {previewRef && (
+          <button
+            type="button"
+            onClick={exitPreview}
+            className={styles.exitPreviewBtn}
+          >
+            Sair do modo Preview
+          </button>
+        )}
       </main>
     </>
   );
@@ -108,18 +176,38 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  console.log(params);
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  previewData,
+}) => {
+  const previewRef = previewData ? previewData.ref : null;
+  const refOption = previewRef ? { ref: previewRef } : null;
+
+  const postSlug = params.slug.toString();
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID(
-    'posts',
-    params.slug?.toString(),
-    null
-  );
+  const post = await prismic.getByUID('posts', postSlug, refOption);
+
+  const [prevPost, nextPost] = await Promise.all([
+    prismic.query(Prismic.predicates.at('document.type', 'posts'), {
+      pageSize: 1,
+      after: post.id,
+      orderings: '[document.first_publication_date]',
+    }),
+    prismic.query(Prismic.predicates.at('document.type', 'posts'), {
+      pageSize: 1,
+      after: post.id,
+      orderings: '[document.first_publication_date desc]',
+    }),
+  ]);
 
   return {
-    props: { post: response },
+    props: {
+      post,
+      previewRef,
+      prevPost: prevPost.results[0] ?? null,
+      nextPost: nextPost.results[0] ?? null,
+    },
     revalidate: 1,
   };
 };
